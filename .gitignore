@@ -1,0 +1,49 @@
+# Compiled object files
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (dynamic libraries)
+*.dll
+*.so
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.stackdump
+
+# Logs
+*.log
+
+# Build directories
+build/
+cmake-build-*/
+
+# IDE specific
+.vscode/
+.idea/
+*.code-workspace
+
+# Dependency management
+node_modules/
+*.lock
+*.cmake
+
+# Misc
+*.bak
+*.swp
+*.tmp

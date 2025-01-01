@@ -1,0 +1,1 @@
+This Password Manager is an open-source tool designed to securely store and encrypt passwords using a user-generated encryption key. The project is currently in early development.
