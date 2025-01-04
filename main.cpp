@@ -30,7 +30,7 @@ std::string toHex(const std::array<uint8_t, N>& key) {
 }
 
 // Load file to buffer and apply padding
-void load(const std::string& name) {
+void load(const std::string& name, std::array<uint8_t, 16> key, std::array<uint8_t, 16> iv) {
     std::ifstream file(name, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Failed to open the file: " << name << std::endl;
@@ -55,7 +55,7 @@ void load(const std::string& name) {
             for(size_t i = bytesRead; i < chunkSize; ++i) {
                 buffer[i] = static_cast<char>(paddingLength);
             }
-            std::cout << "Padded chunk: ";
+            // std::cout << "Padded chunk: ";
             for(size_t i = 0; i < chunkSize; ++i) {
                 std::cout <<  std::hex << std::setw(2) << std::setfill('0') << (0xff & buffer[i]) << " ";
             }
@@ -63,7 +63,11 @@ void load(const std::string& name) {
         }
 
     }
-
+    // End of loading
+    for(int j = 0; j < buffer.size(); j++) {
+        buffer[j] ^= iv[j];
+        std::cout << buffer[j] << std::endl;
+    }
     file.close();
 }
 
@@ -77,7 +81,7 @@ int main() {
     std::cout << "Hex IV: " << hexIV << std::endl;
 
     std::string path = "sample.txt";
-    load(path);
+    load(path, key, iv);
     return 0;
 
 }
