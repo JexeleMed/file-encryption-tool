@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <array>
@@ -86,6 +87,50 @@ Blocks load(const std::string& filename) {
     return blocks;
 }
 
+std::array<std::array<uint8_t, 16>, 11> keyExpansion(const std::array<uint8_t, 16>& key) {
+    std::array<std::array<uint8_t, 16>, 11> roundKeys = {};
+    // Copy main key to round keys
+    for (size_t i = 0; i < 16; ++i) {
+        roundKeys[0][i] = key[i];
+    }
+
+    uint32_t rconIndex = 0;
+
+    for (size_t round = 1; round <= 10; ++round) {
+        // Copy last word from prev round key
+        std::array<uint8_t, 4> temp = {
+            roundKeys[round - 1][12],
+            roundKeys[round - 1][13],
+            roundKeys[round - 1][14],
+            roundKeys[round - 1][15],
+        };
+
+        // RotWord
+        std::rotate(temp.begin(), temp.begin() + 1, temp.end());
+
+        // SubWord
+        for (auto& byte : temp) {
+            byte = sbox[byte];
+        }
+
+
+        temp[0] ^= rcon[rconIndex++];
+
+        // Generate first 4 bytes of round key
+        for (size_t i = 0; i < 4; ++i) {
+            roundKeys[round][i] = roundKeys[round - 1][i] ^ temp[i];
+        }
+        // Generate reaming bytes of round key
+        for (size_t i = 4; i < 16; ++i) {
+            roundKeys[round][i] = roundKeys[round - 1][i] ^ roundKeys[round][i - 4];
+        }
+
+    }
+
+    return roundKeys;
+
+
+}
 
 // Plain text XORing with RoundKey
 void addRoundKey(std::array<uint8_t, 16>& state , const std::array<uint8_t, 16>& roundKey) {
@@ -97,6 +142,8 @@ void addRoundKey(std::array<uint8_t, 16>& state , const std::array<uint8_t, 16>&
 int main() {
     auto key = generateKey();
     auto iv = generateKey();
+
+    // Key printing for debugging
     std::string hexKey = toHex(key);
     std::string hexIV = toHex(iv);
     std::cout << "Hex Key: " << hexKey << std::endl;
@@ -105,10 +152,22 @@ int main() {
     std::string path = "sample.txt";
     Blocks data = load(path);
 
+    // Blocks printing for debbuging
     for (size_t i = 0; i < data.size(); ++i) {
         std::cout << "Block " << i << ": ";
         for (uint8_t byte : data[i]) {
             std::cout << std::hex << static_cast<int>(byte) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    auto roundKeys = keyExpansion(key);
+
+    // Round key print, for debugging
+    for (size_t round = 0; round < roundKeys.size(); ++round) {
+        std::cout << "Round " << round << " key: ";
+        for (const auto& byte : roundKeys[round]) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
         }
         std::cout << std::endl;
     }
