@@ -6,6 +6,10 @@
 #include <fstream>
 #include <vector>
 
+
+using Block = std::array<uint8_t, 16>;
+using Blocks = std::vector<Block>;
+
 // Key generator
 std::array<uint8_t, 16> generateKey() {
     std::array<uint8_t, 16> key = {};
@@ -30,47 +34,39 @@ std::string toHex(const std::array<uint8_t, N>& key) {
 }
 
 // Load file to buffer and apply padding
-void load(const std::string& name, std::array<uint8_t, 16> key, std::array<uint8_t, 16> iv) {
-    std::ifstream file(name, std::ios::binary);
+Blocks load(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Failed to open the file: " << name << std::endl;
-        return;
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return {};
     }
 
-    constexpr  size_t chunkSize = 16;
-    std::vector<char> buffer(chunkSize);
-    size_t chunkIndex = 0;
-    while (file.read(buffer.data(), chunkSize) || file.gcount() > 0) {
-        size_t bytesRead = file.gcount();
-        std::cout << "Chunk " << chunkIndex++ << " bytes read: " << bytesRead << std::endl;
-        for(size_t i = 0; i < bytesRead; ++i) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') << (0xff & buffer[i]) << " ";
-        }
-        std::cout << std::endl;
+    Blocks blocks;
+    constexpr size_t chunkSize = 16;
 
-        if (bytesRead < chunkSize) {
-            size_t paddingLength = chunkSize - bytesRead;
-            std::cout << "Padding applied: " << paddingLength << " bytes" << std::endl;
+        while (!file.eof()) {
+            Block block = {};
+            file.read(reinterpret_cast<char*>(block.data()), chunkSize);
+            size_t bytesRead = file.gcount();
 
-            for(size_t i = bytesRead; i < chunkSize; ++i) {
-                buffer[i] = static_cast<char>(paddingLength);
+            // Padding
+            if (bytesRead < chunkSize) {
+                std::fill(block.begin() + bytesRead, block.end(), static_cast<uint8_t>(chunkSize - bytesRead));
             }
-            // std::cout << "Padded chunk: ";
-            for(size_t i = 0; i < chunkSize; ++i) {
-                std::cout <<  std::hex << std::setw(2) << std::setfill('0') << (0xff & buffer[i]) << " ";
-            }
-            std::cout << std::endl;
+
+            blocks.push_back(block);
         }
 
-    }
-    // End of loading
-    for(int j = 0; j < buffer.size(); j++) {
-        buffer[j] ^= iv[j];
-        std::cout << buffer[j] << std::endl;
-    }
-    file.close();
+    return blocks;
 }
 
+
+// Plain text XORing with RoundKey
+void addRoundKey(std::array<uint8_t, 16>& state , const std::array<uint8_t, 16>& roundKey) {
+    for (size_t i = 0; i < state.size(); ++i) {
+        state[i] ^= roundKey[i];
+    }
+}
 
 int main() {
     auto key = generateKey();
@@ -81,7 +77,15 @@ int main() {
     std::cout << "Hex IV: " << hexIV << std::endl;
 
     std::string path = "sample.txt";
-    load(path, key, iv);
+    Blocks data = load(path);
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        std::cout << "Block " << i << ": ";
+        for (uint8_t byte : data[i]) {
+            std::cout << std::hex << static_cast<int>(byte) << " ";
+        }
+        std::cout << std::endl;
+    }
     return 0;
 
 }
