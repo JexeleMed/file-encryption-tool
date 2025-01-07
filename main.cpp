@@ -85,6 +85,40 @@ void shiftRows(Blocks& blocks) {
     }
 }
 
+uint8_t gfMul(uint8_t a, uint8_t b) {
+    uint8_t res = 0;
+    while (b) {
+        if (b & 1) res ^= a;        // If the youngest bit is set add a
+        bool carry = a & 0x80;     // Check highest bit
+        a <<= 1;                   // Shift left
+        if (carry) a ^= 0x1B;      // XOR
+        b >>= 1;                   // Shift b right
+    }
+    return res;
+}
+
+void mixColumnsHelp(Block& block) {
+    for (int col = 0; col < 4; ++col) {
+        uint8_t b0 = block[col];
+        uint8_t b1 = block[col + 4];
+        uint8_t b2 = block[col + 8];
+        uint8_t b3 = block[col + 12];
+
+        block[col]      = gfMul(0x02, b0) ^ gfMul(0x03, b1) ^ b2 ^ b3;
+        block[col + 4]  = b0 ^ gfMul(0x02, b1) ^ gfMul(0x03, b2) ^ b3;
+        block[col + 8]  = b0 ^ b1 ^ gfMul(0x02, b2) ^ gfMul(0x03, b3);
+        block[col + 12] = gfMul(0x03, b0) ^ b1 ^ b2 ^ gfMul(0x02, b3);
+    }
+}
+
+void mixColumns(Blocks& blocks) {
+    for (auto& block : blocks) {
+        mixColumnsHelp(block); // Mix columns for each block
+    }
+}
+
+
+
 // Load file to buffer and apply padding
 Blocks load(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
@@ -182,7 +216,7 @@ int main() {
     auto roundKeys = keyExpansion(key);
 
     shiftRows((data));
-    // Blocks printing for debbuging
+    // Blocks printing
     for (size_t i = 0; i < data.size(); ++i) {
         std::cout << "Block " << i << ": ";
         for (uint8_t byte : data[i]) {
