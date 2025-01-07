@@ -71,6 +71,19 @@ Blocks subBytes(Blocks& text) {
     return text;
 }
 
+void shiftRowsHelp(Block& block) {
+    std::rotate(block.begin() + 4, block.begin() + 5, block.begin() + 8);
+
+    std::rotate(block.begin() + 8, block.begin() + 10, block.begin() + 12);
+
+    std::rotate(block.begin() + 12, block.begin() + 15, block.begin() + 16);
+}
+
+void shiftRows(Blocks& blocks) {
+    for(auto& block : blocks) {
+        shiftRowsHelp(block);
+    }
+}
 
 // Load file to buffer and apply padding
 Blocks load(const std::string& filename) {
@@ -165,6 +178,10 @@ int main() {
     std::string path = "sample.txt";
     Blocks data = load(path);
 
+
+    auto roundKeys = keyExpansion(key);
+
+    shiftRows((data));
     // Blocks printing for debbuging
     for (size_t i = 0; i < data.size(); ++i) {
         std::cout << "Block " << i << ": ";
@@ -173,19 +190,5 @@ int main() {
         }
         std::cout << std::endl;
     }
-
-    auto roundKeys = keyExpansion(key);
-
-    // Round key print, for debugging
-    // for (size_t round = 0; round < roundKeys.size(); ++round) {
-    //     std::cout << "Round " << round << " key: ";
-    //     for (const auto& byte : roundKeys[round]) {
-    //         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
-    subBytes(data);
     return 0;
-
 }
