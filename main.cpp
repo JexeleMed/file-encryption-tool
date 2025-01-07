@@ -192,12 +192,15 @@ std::array<std::array<uint8_t, 16>, 11> keyExpansion(const std::array<uint8_t, 1
 
 }
 
-// Plain text XORing with RoundKey
-void addRoundKey(std::array<uint8_t, 16>& state , const std::array<uint8_t, 16>& roundKey) {
-    for (size_t i = 0; i < state.size(); ++i) {
-        state[i] ^= roundKey[i];
+// Plain text XORing with RoundKey to add
+void addRoundKey(Blocks& blocks, const std::vector<Block>& roundKeys, size_t round) {
+    for (size_t i = 0; i < blocks.size(); ++i) {
+        for (size_t j = 0; j < blocks[i].size(); ++j) {
+            blocks[i][j] ^= roundKeys[round][j];
+        }
     }
 }
+
 
 int main() {
     auto key = generateKey();
@@ -212,17 +215,6 @@ int main() {
     std::string path = "sample.txt";
     Blocks data = load(path);
 
-
     auto roundKeys = keyExpansion(key);
-
-    shiftRows((data));
-    // Blocks printing
-    for (size_t i = 0; i < data.size(); ++i) {
-        std::cout << "Block " << i << ": ";
-        for (uint8_t byte : data[i]) {
-            std::cout << std::hex << static_cast<int>(byte) << " ";
-        }
-        std::cout << std::endl;
-    }
     return 0;
 }
