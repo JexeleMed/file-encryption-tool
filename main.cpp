@@ -59,6 +59,19 @@ std::string toHex(const std::array<uint8_t, N>& key) {
     return oss.str();
 }
 
+Blocks subBytes(Blocks& text) {
+    for(int i = 0; i < text.size(); i++) {
+        for(int j = 0; j < 16; j++) {
+            text[i][j] = sbox[text[i][j]];
+            std::cout  << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(text[i][j]) <<  " "; // debug
+        }
+        std::cout << std::endl;
+    }
+
+    return text;
+}
+
+
 // Load file to buffer and apply padding
 Blocks load(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
@@ -164,13 +177,15 @@ int main() {
     auto roundKeys = keyExpansion(key);
 
     // Round key print, for debugging
-    for (size_t round = 0; round < roundKeys.size(); ++round) {
-        std::cout << "Round " << round << " key: ";
-        for (const auto& byte : roundKeys[round]) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-        }
-        std::cout << std::endl;
-    }
+    // for (size_t round = 0; round < roundKeys.size(); ++round) {
+    //     std::cout << "Round " << round << " key: ";
+    //     for (const auto& byte : roundKeys[round]) {
+    //         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    subBytes(data);
     return 0;
 
 }
