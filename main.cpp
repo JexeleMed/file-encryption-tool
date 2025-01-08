@@ -60,9 +60,9 @@ std::string toHex(const std::array<uint8_t, N>& key) {
 }
 
 void subBytes(Blocks& text) {
-    for(int i = 0; i < text.size(); i++) {
-        for(int j = 0; j < 16; j++) {
-            text[i][j] = sbox[text[i][j]];
+    for (auto& block : text) {
+        for (auto& byte : block) {
+            byte = sbox[byte];
         }
     }
 }
@@ -179,9 +179,9 @@ std::vector<Block> keyExpansion(const Block& key) {
 
 // Plain text XORing with RoundKey to add
 void addRoundKey(Blocks& blocks, const std::vector<Block>& roundKeys, size_t round) {
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        for (size_t j = 0; j < blocks[i].size(); ++j) {
-            blocks[i][j] ^= roundKeys[round][j];
+    for (auto& block : blocks) {
+        for (size_t j = 0; j < block.size(); ++j) {
+            block[j] ^= roundKeys[round][j];
         }
     }
 }
