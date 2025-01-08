@@ -59,16 +59,12 @@ std::string toHex(const std::array<uint8_t, N>& key) {
     return oss.str();
 }
 
-Blocks subBytes(Blocks& text) {
+void subBytes(Blocks& text) {
     for(int i = 0; i < text.size(); i++) {
         for(int j = 0; j < 16; j++) {
             text[i][j] = sbox[text[i][j]];
-            std::cout  << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(text[i][j]) <<  " "; // debug
         }
-        std::cout << std::endl;
     }
-
-    return text;
 }
 
 void shiftRowsHelp(Block& block) {
@@ -147,17 +143,12 @@ Blocks load(const std::string& filename) {
     return blocks;
 }
 
-std::array<std::array<uint8_t, 16>, 11> keyExpansion(const std::array<uint8_t, 16>& key) {
-    std::array<std::array<uint8_t, 16>, 11> roundKeys = {};
-    // Copy main key to round keys
-    for (size_t i = 0; i < 16; ++i) {
-        roundKeys[0][i] = key[i];
-    }
+std::vector<Block> keyExpansion(const Block& key) {
+    std::vector<Block> roundKeys(11);
+    roundKeys[0] = key;
 
     uint32_t rconIndex = 0;
-
     for (size_t round = 1; round <= 10; ++round) {
-        // Copy last word from prev round key
         std::array<uint8_t, 4> temp = {
             roundKeys[round - 1][12],
             roundKeys[round - 1][13],
@@ -165,32 +156,26 @@ std::array<std::array<uint8_t, 16>, 11> keyExpansion(const std::array<uint8_t, 1
             roundKeys[round - 1][15],
         };
 
-        // RotWord
         std::rotate(temp.begin(), temp.begin() + 1, temp.end());
 
-        // SubWord
         for (auto& byte : temp) {
             byte = sbox[byte];
         }
 
-
         temp[0] ^= rcon[rconIndex++];
 
-        // Generate first 4 bytes of round key
         for (size_t i = 0; i < 4; ++i) {
             roundKeys[round][i] = roundKeys[round - 1][i] ^ temp[i];
         }
-        // Generate reaming bytes of round key
+
         for (size_t i = 4; i < 16; ++i) {
             roundKeys[round][i] = roundKeys[round - 1][i] ^ roundKeys[round][i - 4];
         }
-
     }
 
     return roundKeys;
-
-
 }
+
 
 // Plain text XORing with RoundKey to add
 void addRoundKey(Blocks& blocks, const std::vector<Block>& roundKeys, size_t round) {
@@ -201,6 +186,25 @@ void addRoundKey(Blocks& blocks, const std::vector<Block>& roundKeys, size_t rou
     }
 }
 
+void aesEncrypt(Blocks& blocks, const std::array<uint8_t, 16>& key) {
+    auto roundKeys = keyExpansion(key);
+    addRoundKey(blocks, roundKeys, 0);
+    for(size_t round = 1; round < 10; ++round) {
+        subBytes(blocks);
+        for (auto& block : blocks) {
+            // Apply ShiftRows and MixColumns
+            shiftRowsHelp(block);
+            mixColumnsHelp(block);
+        }
+        addRoundKey(blocks, roundKeys, round);
+    }
+}
+
+void printBlocks(const Blocks& blocks) {
+    for (const auto& block : blocks) {
+        std::cout << toHex(block) << std::endl;
+    }
+}
 
 int main() {
     auto key = generateKey();
@@ -215,6 +219,9 @@ int main() {
     std::string path = "sample.txt";
     Blocks data = load(path);
 
-    auto roundKeys = keyExpansion(key);
+    aesEncrypt(data, key);
+
+    std::cout << "Encrypted Data:" << std::endl;
+    printBlocks(data);
     return 0;
 }
