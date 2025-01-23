@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_executable(password_manager
-        main.cpp)
+        main.cpp
+        AESEncryption.h)
 
 add_custom_command(
         TARGET password_manager POST_BUILD
