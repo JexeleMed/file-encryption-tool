@@ -206,6 +206,22 @@ void printBlocks(const Blocks& blocks) {
     }
 }
 
+void save(const Blocks& blocks) {
+
+    std::ofstream newFile("Encrypted.txt");
+    if(!newFile) {
+        std::cerr << "Failed to open file! " << std::endl;
+    }
+
+    for (const auto& block : blocks) {
+        for(const auto& byte : block) {
+            newFile << byte;
+        }
+    }
+
+    newFile.close();
+}
+
 int main() {
     auto key = generateKey();
     auto iv = generateKey();
@@ -223,5 +239,6 @@ int main() {
 
     std::cout << "Encrypted Data:" << std::endl;
     printBlocks(data);
+    save(data);
     return 0;
 }
