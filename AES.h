@@ -29,7 +29,7 @@ public:
      * @param outputFilePath - Path to save the encrypted file.
      */
     void encryptFile(const std::string& inputFilePath, const std::string& outputFilePath);
-    void AES::invMixColumns(Blocks& blocks);
+    void invMixColumns(Blocks& blocks);
     void decryptFile(const std::string& inputFilePath, const std::string& outputFilePath);
 
     /**
@@ -82,7 +82,7 @@ private:
      * @param blocks - The data blocks to transform.
      */
     void subBytes(Blocks& blocks);
-    void AES::invsubBytes(Blocks& blocks);
+    void invsubBytes(Blocks& blocks);
 
     /**
      * Performs the ShiftRows transformation on the data.
@@ -126,6 +126,7 @@ private:
      * @param filename - Path to save the encrypted file.
      */
     void save(const Blocks& blocks, const std::string& filename);
+    void saveTxt(const Blocks& blocks, const std::string& filename);
 
     // Utility methods
     /**

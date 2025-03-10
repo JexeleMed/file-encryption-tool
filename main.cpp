@@ -8,9 +8,13 @@ int main() {
     AES aes(key, iv);
 
     std::string inputFile = "sample.txt";
+    std::string decrypted = "decrypted.txt";
     std::string outputFile = "encrypted.bin";
 
     aes.encryptFile(inputFile, outputFile);
+    aes.decryptFile(outputFile, decrypted);
+
+
 
     std::cout << "File encrypted successfully!" << std::endl;
     return 0;

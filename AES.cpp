@@ -184,6 +184,32 @@ Blocks AES::load(const std::string& filename) {
     return blocks;
 }
 
+#include <fstream>
+#include <iostream>
+#include <cctype>  // For isprint()
+
+void AES::saveTxt(const Blocks& blocks, const std::string& filename) {
+    std::ofstream file(filename);
+    if (!file) {
+        std::cerr << "Failed to open file for writing: " << filename << std::endl;
+        return;
+    }
+
+    for (const auto& block : blocks) {
+        for (const auto& byte : block) {
+            // If the byte is a printable ASCII character, write it as a character
+            if (std::isprint(byte)) {
+                file << static_cast<char>(byte);
+            } else {
+                // If the byte is not printable, replace it with a placeholder (e.g., dot or space)
+                file << '.';
+            }
+        }
+        file << std::endl;  // New line after each block
+    }
+
+    std::cout << "Successfully saved data to " << filename << std::endl;
+}
 
 void AES::save(const Blocks& blocks, const std::string& filename) {
     std::ofstream file(filename, std::ios::binary);
@@ -242,12 +268,13 @@ void AES::decryptFile(const std::string& inputFilePath, const std::string& outpu
     Blocks data = load(inputFilePath);
     addRoundKey(data, roundKeys, 0);
 
-    for (size_t round = 1; round < 10; ++round) {
+    for (size_t round = 9; round > 0; --round) {
         addRoundKey(data, roundKeys, round);
         invMixColumns(data);
         shiftRows(data);
+        invsubBytes(data);
     }
 
-    save(data, outputFilePath);
+    saveTxt(data, outputFilePath);
 
 }
