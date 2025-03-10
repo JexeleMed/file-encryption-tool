@@ -29,6 +29,8 @@ public:
      * @param outputFilePath - Path to save the encrypted file.
      */
     void encryptFile(const std::string& inputFilePath, const std::string& outputFilePath);
+    void AES::invMixColumns(Blocks& blocks);
+    void decryptFile(const std::string& inputFilePath, const std::string& outputFilePath);
 
     /**
      * Returns the encryption key as a hexadecimal string.

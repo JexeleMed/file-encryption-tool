@@ -174,3 +174,33 @@ void AES::encryptFile(const std::string& inputFilePath, const std::string& outpu
 
     save(data, outputFilePath);
 }
+
+void AES::invMixColumns(Blocks& blocks) {
+    for (auto& block : blocks) {
+        for (int col = 0; col < 4; ++col) {
+            uint8_t b0 = block[col];
+            uint8_t b1 = block[col + 4];
+            uint8_t b2 = block[col + 8];
+            uint8_t b3 = block[col + 12];
+
+            block[col]      = gfMul(0x0e, b0) ^ gfMul(0x0b, b1) ^ gfMul(0x0d, b2) ^ gfMul(0x09, b3);
+            block[col + 4]  = gfMul(0x09, b0) ^ gfMul(0x0e, b1) ^ gfMul(0x0b, b2) ^ gfMul(0x0d, b3);
+            block[col + 8]  = gfMul(0x0d, b0) ^ gfMul(0x09, b1) ^ gfMul(0x0e, b2) ^ gfMul(0x0b, b3);
+            block[col + 12] = gfMul(0x0b, b0) ^ gfMul(0x0d, b1) ^ gfMul(0x09, b2) ^ gfMul(0x0e, b3);
+        }
+    }
+}
+
+
+void AES::decryptFile(const std::string& inputFilePath, const std::string& outputFilePath) {
+    Blocks data = load(inputFilePath);
+    addRoundKey(data, roundKeys, 0);
+
+    for (size_t round = 1; round < 10; ++round) {
+        addRoundKey(data, roundKeys, round);
+        invMixColumns(data);
+    }
+
+    save(data, outputFilePath);
+
+}
