@@ -66,6 +66,7 @@ private:
 
     // AES constants
     static const std::array<uint8_t, 256> sbox; // Substitution box
+    static const std::array<uint8_t, 256> invsbox;
     static const std::array<uint8_t, 10> rcon; // Round constants
 
     // AES-specific methods
@@ -81,6 +82,7 @@ private:
      * @param blocks - The data blocks to transform.
      */
     void subBytes(Blocks& blocks);
+    void AES::invsubBytes(Blocks& blocks);
 
     /**
      * Performs the ShiftRows transformation on the data.
